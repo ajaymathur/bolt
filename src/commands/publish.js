@@ -59,15 +59,18 @@ export async function publish(opts: PublishOptions) {
     // TODO: Re-enable once locking issues are sorted out
     // await locks.lock(packages);
     const unpublishedPackages = await getUnpublishedPackages(packages);
+
+    //Terminate if there are no packages to publish
+    if (unpublishedPackages.length === 0) {
+      logger.warn(messages.noUnpublishedPackagesToPublish());
+      return {};
+    }
+
     const isUnpublished = workspace =>
       unpublishedPackages.some(
         pkg => workspace.pkg.config.getName() === pkg.name
       );
     const unpublishedWorkspaces = workspaces.filter(isUnpublished);
-
-    if (unpublishedPackages.length === 0) {
-      logger.warn(messages.noUnpublishedPackagesToPublish());
-    }
 
     await Project.runWorkspaceTasks(unpublishedWorkspaces, async workspace => {
       const name = workspace.pkg.config.getName();
